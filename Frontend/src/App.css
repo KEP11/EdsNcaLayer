@@ -1,0 +1,108 @@
+.App {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+}
+
+h3 {
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.section {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+button {
+  margin: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #005a9e;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+input[type="file"],
+input[type="password"] {
+  margin: 5px;
+  padding: 8px;
+  width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input[type="password"] {
+  display: block;
+  margin-top: 10px;
+}
+
+p {
+  margin: 10px 0;
+  color: #333;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+
+.table thead {
+  background-color: #f0f0f0;
+  border-bottom: 2px solid #ddd;
+}
+
+.table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  border: 1px solid #ddd;
+}
+
+.table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+}
+
+.thead-default {
+  background-color: #f9f9f9;
+  user-select: none;
+}
+
+.thead-default tr {
+  transition: background-color 0.2s;
+}
+
+.thead-default tr:hover {
+  background-color: #efefef;
+}
