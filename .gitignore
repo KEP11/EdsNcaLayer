@@ -80,6 +80,9 @@ ScaffoldingReadMe.txt
 # StyleCop
 StyleCopReport.xml
 
+#Local Rider settings
+*.idea
+
 # Files built by Visual Studio
 *_i.c
 *_p.c

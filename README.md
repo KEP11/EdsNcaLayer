@@ -27,7 +27,7 @@ Prerequisites
 ### Mandatory for Signing Operations
 - **NCALayer** (v1.4+) - **MUST be installed and running locally**
   - WebSocket endpoint: `wss://127.0.0.1:13579`
-  - Download: [pki.gov.kz](https://pki.gov.kz/)
+  - Download: [ncl.pki.gov.kz](https://ncl.pki.gov.kz/)
   - Verify installation: Open `https://127.0.0.1:13579` in browser
   - Status: **Required** - signing will not work without NCALayer
 
