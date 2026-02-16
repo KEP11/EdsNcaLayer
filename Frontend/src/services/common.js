@@ -56,3 +56,44 @@ export const sendWs = (socketRef, socket, request) => {
   }
   return false;
 };
+
+/**
+ * Establishes WebSocket connection to NCALayer
+ * @param {Function} onOpen - Callback when connection opens
+ * @param {Function} onMessage - Callback when message is received
+ * @param {Function} onError - Callback when error occurs
+ * @param {Function} onClose - Callback when connection closes
+ * @returns {WebSocket} WebSocket instance
+ */
+export const connectToNCALayer = (onOpen, onMessage, onError, onClose) => {
+  const ws = new WebSocket('wss://127.0.0.1:13579');
+  
+  ws.onopen = () => {
+    console.log('WebSocket opened');
+    if (onOpen) onOpen(ws);
+  };
+
+  ws.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    if (onError) onError(error);
+  };
+
+  ws.onmessage = (event) => {
+    console.log('Received message:', event.data);
+    try {
+      const response = JSON.parse(event.data);
+      console.log('Parsed response:', response);
+      if (onMessage) onMessage(response);
+    } catch (err) {
+      console.error('Failed to parse response:', err);
+      if (onError) onError(err);
+    }
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket closed');
+    if (onClose) onClose();
+  };
+
+  return ws;
+};
