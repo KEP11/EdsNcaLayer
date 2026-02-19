@@ -6,7 +6,7 @@ namespace EdsWebApi.Controllers;
 
 [ApiController]
 [Route("api/sign")]
-public sealed class SignController(DocumentSignService service) : ControllerBase
+public sealed class SignController(IDocumentSignService service) : ControllerBase
 {
     /// <summary>
     /// Signs multiple documents in batch using the same certificate

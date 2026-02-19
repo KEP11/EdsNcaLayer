@@ -394,13 +394,6 @@ public sealed class DocumentSignService : IDocumentSignService
         var existingSignaturePem = PrepareSignatureForVerification(existingCmsBase64);
         var originalData = ExtractOriginalData(existingSignaturePem);
 
-        if (TryNativeSdkCoSigning(existingSignaturePem, originalData, out var signedData))
-        {
-            _logger.LogInformation("Co-signature added using native SDK");
-            return signedData;
-        }
-
-        _logger.LogInformation("Native SDK blocked, using BouncyCastle approach");
         return _coSigningService.AddCoSignature(_kalkanApi, existingCmsBase64, originalData);
     }
 
@@ -423,35 +416,5 @@ public sealed class DocumentSignService : IDocumentSignService
 
         var base64String = extractedData.ToString().Trim('\0');
         return Convert.FromBase64String(base64String);
-    }
-
-    private bool TryNativeSdkCoSigning(string signaturePem, byte[] originalData, out string signedData)
-    {
-        signedData = string.Empty;
-
-        try
-        {
-            var coSignFlags = KalkanSignFlags.SignCms | KalkanSignFlags.InputPem | KalkanSignFlags.OutputPem;
-            var result = _kalkanApi.SignData(originalData, coSignFlags, inputSignature: signaturePem);
-
-            if (result.Contains("-----BEGIN"))
-            {
-                var lines = result.Split('\n');
-                var base64Lines = lines.Where(line =>
-                    !line.Contains("-----BEGIN") &&
-                    !line.Contains("-----END") &&
-                    !string.IsNullOrWhiteSpace(line)).ToArray();
-                result = string.Join("", base64Lines);
-            }
-
-            signedData = result;
-            return true;
-        }
-        catch (Exception ex) when (ex.Message.Contains("certificate already present") ||
-                                   ex.Message.Contains("already signed this data") ||
-                                   ex.Message.Contains("This certificate has already signed this document"))
-        {
-            return false;
-        }
     }
 }
