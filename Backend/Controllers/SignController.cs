@@ -9,68 +9,6 @@ namespace EdsWebApi.Controllers;
 public sealed class SignController(DocumentSignService service) : ControllerBase
 {
     /// <summary>
-    /// Signs a single document using KalkanAPI
-    /// </summary>
-    /// <param name="request">Sign request containing document and certificate info</param>
-    /// <returns>Signed document in CMS format</returns>
-    /*[HttpPost]
-    [RequestSizeLimit(100_000_000)] // 100MB limit
-    public IActionResult SignDocument([FromBody] SignRequest request)
-    {
-        if (string.IsNullOrWhiteSpace(request.DocumentBase64))
-        {
-            return BadRequest(new SignResponse
-            {
-                Success = false,
-                Message = "DocumentBase64 is required"
-            });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.KeyStoreBase64))
-        {
-            return BadRequest(new SignResponse
-            {
-                Success = false,
-                Message = "KeyStoreBase64 is required"
-            });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.Password))
-        {
-            return BadRequest(new SignResponse
-            {
-                Success = false,
-                Message = "Password is required"
-            });
-        }
-
-        try
-        {
-            var result = service.SignDocument(
-                request.DocumentBase64,
-                request.KeyStoreBase64,
-                request.Password,
-                request.StorageType
-            );
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return StatusCode(500, result);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new SignResponse
-            {
-                Success = false,
-                Message = $"Internal error: {ex.Message}"
-            });
-        }
-    }*/
-
-    /// <summary>
     /// Signs multiple documents in batch using the same certificate
     /// </summary>
     /// <param name="request">Batch sign request containing multiple documents and certificate info</param>

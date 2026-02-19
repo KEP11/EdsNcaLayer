@@ -1,0 +1,31 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34701.34
+MinimumVisualStudioVersion = 10.0.40219.1
+
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EdsWebApi", "Backend\EdsWebApi.csproj", "{EAF599C0-521E-45E1-8763-8AAC48717F3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NKalkan", "..\..\Projects\NKalkan\NKalkan\NKalkan.csproj", "{8986A893-1801-4E8F-BCAD-605F62A467E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Backend.Tests", "Backend.Tests\Backend.Tests.csproj", "{97A3137E-B3FB-426A-B8A9-02005C297E2C}"
+EndProject
+Global
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EAF599C0-521E-45E1-8763-8AAC48717F3E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAF599C0-521E-45E1-8763-8AAC48717F3E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAF599C0-521E-45E1-8763-8AAC48717F3E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAF599C0-521E-45E1-8763-8AAC48717F3E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8986A893-1801-4E8F-BCAD-605F62A467E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8986A893-1801-4E8F-BCAD-605F62A467E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8986A893-1801-4E8F-BCAD-605F62A467E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8986A893-1801-4E8F-BCAD-605F62A467E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97A3137E-B3FB-426A-B8A9-02005C297E2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97A3137E-B3FB-426A-B8A9-02005C297E2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97A3137E-B3FB-426A-B8A9-02005C297E2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97A3137E-B3FB-426A-B8A9-02005C297E2C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+EndGlobal

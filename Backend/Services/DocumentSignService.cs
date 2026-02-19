@@ -1,16 +1,19 @@
+using System.Text;
 using EdsWebApi.Models;
 using NKalkan;
 
 namespace EdsWebApi.Services;
 
-public sealed class DocumentSignService
+public sealed class DocumentSignService : IDocumentSignService
 {
     private readonly ILogger<DocumentSignService> _logger;
-    private KalkanApi _kalkanApi;
+    private readonly ICmsCoSigningService _coSigningService;
+    private readonly KalkanApi _kalkanApi;
 
-    public DocumentSignService(ILogger<DocumentSignService> logger)
+    public DocumentSignService(ILogger<DocumentSignService> logger, ICmsCoSigningService coSigningService)
     {
         _logger = logger;
+        _coSigningService = coSigningService;
         _kalkanApi = new KalkanApi();
         _kalkanApi.SetTSAUrl("http://tsp.pki.gov.kz");
     }
@@ -33,7 +36,6 @@ public sealed class DocumentSignService
             var kalkanStorageType = ParseStorageType(request.StorageType);
             _kalkanApi.LoadKeyStoreFromBase64(kalkanStorageType, request.KeyStoreBase64, request.Password);
 
-            // Sign each document
             foreach (var doc in request.Documents)
             {
                 var result = new DocumentSignResult
@@ -45,13 +47,19 @@ public sealed class DocumentSignService
                 {
                     var documentBytes = Convert.FromBase64String(doc.DocumentBase64);
 
-                    var inputFormat = KalkanInputFormat.Pem | KalkanInputFormat.Base64 | KalkanInputFormat.Der;
-                    var outputFormat = KalkanOutputFormat.Pem | KalkanOutputFormat.Base64;
-                    var signedData = _kalkanApi.SignData(documentBytes, KalkanSignType.Cms, inputFormat, outputFormat);
-
-                    result.SignatureBase64 = signedData;
-                    result.Success = true;
-                    response.SuccessCount++;
+                    if (IsCmsSignature(doc.DocumentBase64))
+                    {
+                        result.SignatureBase64 = AddCoSignature(doc.DocumentBase64);
+                        result.Success = true;
+                        response.SuccessCount++;
+                    }
+                    else
+                    {
+                        var signFlags = KalkanSignFlags.SignCms | KalkanSignFlags.WithTimestamp | KalkanSignFlags.OutputBase64;
+                        result.SignatureBase64 = _kalkanApi.SignData(documentBytes, signFlags);
+                        result.Success = true;
+                        response.SuccessCount++;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -72,18 +80,15 @@ public sealed class DocumentSignService
             response.Message = $"Batch signing error: {ex.Message}";
             
             // Mark all documents as failed if keystore loading fails
-            foreach (var doc in request.Documents)
+            foreach (var doc in request.Documents.Where(doc => response.Results.All(r => r.FileName != doc.FileName)))
             {
-                if (response.Results.All(r => r.FileName != doc.FileName))
+                response.Results.Add(new DocumentSignResult
                 {
-                    response.Results.Add(new DocumentSignResult
-                    {
-                        FileName = doc.FileName,
-                        Success = false,
-                        ErrorMessage = ex.Message
-                    });
-                    response.FailedCount++;
-                }
+                    FileName = doc.FileName,
+                    Success = false,
+                    ErrorMessage = ex.Message
+                });
+                response.FailedCount++;
             }
         }
 
@@ -97,10 +102,7 @@ public sealed class DocumentSignService
     /// <param name="password">Password for the keystore</param>
     /// <param name="storageType">Type of storage</param>
     /// <returns>Certificate information</returns>
-    public CertificateInfo GetCertificateInfo(
-        string keyStoreBase64,
-        string password,
-        string storageType = "PKCS12")
+    public CertificateInfo GetCertificateInfo(string keyStoreBase64, string password, string storageType = "PKCS12")
     {
         try
         {
@@ -149,22 +151,20 @@ public sealed class DocumentSignService
         try
         {
             // Log signature format for diagnostics
-            bool hasPemHeaders = cmsSignatureBase64.Contains("-----BEGIN");
+            var hasPemHeaders = cmsSignatureBase64.Contains("-----BEGIN");
             _logger.LogInformation("Signature format: {Format}", hasPemHeaders ? "PEM" : "Base64");
-            
-            // Optionally load keystore if provided
+
             if (!string.IsNullOrWhiteSpace(keyStoreBase64) && !string.IsNullOrWhiteSpace(password))
             {
                 var storageTypeEnum = ParseStorageType(storageType ?? "PKCS12");
                 _kalkanApi.LoadKeyStoreFromBase64(storageTypeEnum, keyStoreBase64, password);
                 _logger.LogInformation("Keystore loaded for verification");
             }
-            
+
             try
             {
                 // Determine if signature has PEM headers or is pure base64
                 var signatureForVerification = cmsSignatureBase64;
-                var inputFormat = KalkanInputFormat.Base64;
                 
                 // If has PEM headers, extract the base64 content
                 if (hasPemHeaders)
@@ -185,7 +185,7 @@ public sealed class DocumentSignService
                 }
                 
                 // Decode original document if provided
-                byte[] documentBytes = !string.IsNullOrWhiteSpace(originalDocumentBase64) 
+                var documentBytes = !string.IsNullOrWhiteSpace(originalDocumentBase64) 
                     ? Convert.FromBase64String(originalDocumentBase64) 
                     : [];
 
@@ -305,9 +305,8 @@ public sealed class DocumentSignService
         }
     }
 
-    private CertificateInfo ExtractCertificateInfo(KalkanApi kalkanApi, string certificate)
-    {
-        return new CertificateInfo
+    private CertificateInfo ExtractCertificateInfo(KalkanApi kalkanApi, string certificate) =>
+        new()
         {
             Subject = kalkanApi.GetCertificateProperty(certificate, KalkanCertificateProperty.SubjectCommonName),
             Issuer = kalkanApi.GetCertificateProperty(certificate, KalkanCertificateProperty.IssuerCommonName),
@@ -315,15 +314,144 @@ public sealed class DocumentSignService
             ValidFrom = kalkanApi.GetCertificateProperty(certificate, KalkanCertificateProperty.NotBefore),
             ValidTo = kalkanApi.GetCertificateProperty(certificate, KalkanCertificateProperty.NotAfter)
         };
-    }
 
-    private KalkanStorageType ParseStorageType(string storageType)
-    {
-        return storageType.ToUpperInvariant() switch
+    private KalkanStorageType ParseStorageType(string storageType) =>
+        storageType.ToUpperInvariant() switch
         {
             "PKCS12" => KalkanStorageType.PKCS12,
             "KAZTOKEN" => KalkanStorageType.KazToken,
             _ => KalkanStorageType.PKCS12
         };
+
+    private bool IsCmsSignature(string base64Data)
+    {
+        try
+        {
+            if (base64Data.Contains("-----BEGIN CMS-----") || base64Data.Contains("-----BEGIN PKCS7-----"))
+            {
+                return true;
+            }
+
+            var data = Convert.FromBase64String(base64Data);
+
+            if (data.Length < 1024 || data[0] != 0x30)
+            {
+                return false;
+            }
+
+            var pkcs7Oid = new byte[] { 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07 };
+            var searchLimit = Math.Min(100, data.Length - pkcs7Oid.Length);
+
+            for (var i = 0; i < searchLimit; i++)
+            {
+                var match = true;
+                for (var j = 0; j < pkcs7Oid.Length; j++)
+                {
+                    if (data[i + j] != pkcs7Oid[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Wraps base64 content to specified line length (PEM standard is 64 characters)
+    /// </summary>
+    private static string WrapBase64Content(string base64Content, int lineLength = 64)
+    {
+        if (string.IsNullOrEmpty(base64Content))
+            return base64Content;
+
+        var result = new StringBuilder();
+        for (var i = 0; i < base64Content.Length; i += lineLength)
+        {
+            if (i > 0)
+                result.Append('\n');
+            
+            var length = Math.Min(lineLength, base64Content.Length - i);
+            result.Append(base64Content, i, length);
+        }
+        return result.ToString();
+    }
+
+    private string AddCoSignature(string existingCmsBase64)
+    {
+        _logger.LogInformation("Adding co-signature to existing CMS");
+
+        var existingSignaturePem = PrepareSignatureForVerification(existingCmsBase64);
+        var originalData = ExtractOriginalData(existingSignaturePem);
+
+        if (TryNativeSdkCoSigning(existingSignaturePem, originalData, out var signedData))
+        {
+            _logger.LogInformation("Co-signature added using native SDK");
+            return signedData;
+        }
+
+        _logger.LogInformation("Native SDK blocked, using BouncyCastle approach");
+        return _coSigningService.AddCoSignature(_kalkanApi, existingCmsBase64, originalData);
+    }
+
+    private string PrepareSignatureForVerification(string cmsBase64)
+    {
+        if (cmsBase64.Contains("-----BEGIN"))
+            return cmsBase64;
+
+        var wrappedBase64 = WrapBase64Content(cmsBase64, 64);
+        return $"-----BEGIN CMS-----\n{wrappedBase64}\n-----END CMS-----";
+    }
+
+    private byte[] ExtractOriginalData(string signaturePem)
+    {
+        var verifyFlags = KalkanSignFlags.SignCms | KalkanSignFlags.InputPem | KalkanSignFlags.OutputBase64;
+        _kalkanApi.VerifyData([], signaturePem, verifyFlags, out var extractedData, out _);
+
+        if (extractedData is not { Length: > 0 })
+            throw new InvalidOperationException("Cannot extract original data from CMS");
+
+        var base64String = extractedData.ToString().Trim('\0');
+        return Convert.FromBase64String(base64String);
+    }
+
+    private bool TryNativeSdkCoSigning(string signaturePem, byte[] originalData, out string signedData)
+    {
+        signedData = string.Empty;
+
+        try
+        {
+            var coSignFlags = KalkanSignFlags.SignCms | KalkanSignFlags.InputPem | KalkanSignFlags.OutputPem;
+            var result = _kalkanApi.SignData(originalData, coSignFlags, inputSignature: signaturePem);
+
+            if (result.Contains("-----BEGIN"))
+            {
+                var lines = result.Split('\n');
+                var base64Lines = lines.Where(line =>
+                    !line.Contains("-----BEGIN") &&
+                    !line.Contains("-----END") &&
+                    !string.IsNullOrWhiteSpace(line)).ToArray();
+                result = string.Join("", base64Lines);
+            }
+
+            signedData = result;
+            return true;
+        }
+        catch (Exception ex) when (ex.Message.Contains("certificate already present") ||
+                                   ex.Message.Contains("already signed this data") ||
+                                   ex.Message.Contains("This certificate has already signed this document"))
+        {
+            return false;
+        }
     }
 }

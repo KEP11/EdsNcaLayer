@@ -33,7 +33,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Services
-builder.Services.AddScoped<DocumentSignService>(); // KalkanAPI document signing service
+builder.Services.AddScoped<ICmsCoSigningService, CmsCoSigningService>();
+builder.Services.AddScoped<IDocumentSignService, DocumentSignService>();
 
 var app = builder.Build();
 
