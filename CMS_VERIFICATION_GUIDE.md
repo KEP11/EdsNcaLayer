@@ -60,6 +60,7 @@ Response:
 
 ## Related files
 - `Frontend/src/App.jsx`
+- `Frontend/src/components/VerifyModule.jsx`
 - `Frontend/src/services/verifyService.js`
 - `Frontend/src/services/batchVerifyService.js`
 - `Backend/Controllers/SignController.cs`

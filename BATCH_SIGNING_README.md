@@ -1,12 +1,12 @@
 # Batch Signing (Current State)
 
-## Important status
-Backend batch signing API is implemented.
-Frontend batch signing UI is currently hidden (`showBatchSign = false` in `Frontend/src/App.jsx`).
+## Current status
+Backend batch signing API is implemented and exposed.
+Frontend batch signing UI is available through `BatchSignModule` in the **Batch Sign** tab.
 
 This means:
-- API consumers can use backend batch signing now
-- End users in current web UI do not see batch signing section
+- API consumers can use backend batch signing directly
+- End users can batch sign from the current web UI
 
 ## Backend endpoint
 `POST /api/sign/batch`
@@ -66,9 +66,11 @@ Invoke-RestMethod -Uri 'http://localhost:5000/api/sign/batch' -Method Post -Cont
 ```
 
 ## Frontend note
-Frontend currently performs user-facing signing through NCALayer directly (WebSocket), not through this batch API module.
+`BatchSignModule` uses backend API (`/api/sign/batch`) for batch signing workflow.
+Single-sign and verification workflows use NCALayer WebSocket in other modules.
 
 ## Related files
 - `Backend/Controllers/SignController.cs`
 - `Backend/Services/DocumentSignService.cs`
-- `Frontend/src/services/batchSignApiService.js` (available, but UI path is hidden)
+- `Frontend/src/components/BatchSignModule.jsx`
+- `Frontend/src/services/batchSignApiService.js`

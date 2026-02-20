@@ -15,7 +15,7 @@ function VerifyModule() {
   // State management
   const [socket, setSocket] = useState(null);
   const socketRef = useRef(null);
-  const [pendingRequest, setPendingRequest] = useState(null);
+  const [, setPendingRequest] = useState(null);
   const pendingRequestRef = useRef(null);
   const [status, setStatus] = useState('');
   
@@ -26,7 +26,6 @@ function VerifyModule() {
   const [verifyStatus, setVerifyStatus] = useState('');
   const [verifyResult, setVerifyResult] = useState(null);
   const [collapsedSigners, setCollapsedSigners] = useState({});
-  const [fileDir, setFileDir] = useState('');
   
   // Batch verification state
   const [batchVerifyFiles, setBatchVerifyFiles] = useState([]);
@@ -323,7 +322,7 @@ function VerifyModule() {
     requestBatchVerifyFilesService({
       socketRef,
       socket,
-      fileDir,
+      fileDir: '',
       setBatchVerifyProgress,
       setPendingRequest,
       pendingRequestRef
@@ -384,7 +383,6 @@ function VerifyModule() {
         </div>
         {signers.map((signer, idx) => {
           const isCollapsed = collapsedSigners[idx];
-          const resultClass = signer.validSignature ? 'success' : 'danger';
           const resultText = signer.validSignature ? 'Успешно' : 'Неудачно';
           
           return (

@@ -60,6 +60,7 @@ Use generated start script from install folder:
 - Swagger opens at `http://localhost:5000`
 - NCALayer is running and reachable
 - Sign/verify/extract flows work in UI
+- Batch Sign tab works (backend API integration)
 
 ## Troubleshooting
 - Backend fails: verify .NET runtime and `KalkanCrypt.dll`

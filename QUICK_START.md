@@ -6,12 +6,11 @@
   - Verify one CMS
   - Extract original document from CMS
   - Batch verify CMS files (sequentially)
+- Frontend also supports Batch Sign through `BatchSignModule` (calls backend API)
 - Backend (ASP.NET Core 8) provides API endpoints in `SignController`:
   - `POST /api/sign/batch`
   - `POST /api/sign/certificate/info`
   - `POST /api/sign/verify`
-
-Note: Batch sign UI in frontend is currently hidden by feature flag in `Frontend/src/App.jsx` (`showBatchSign = false`).
 
 ## Prerequisites
 - .NET SDK 8.0+
@@ -64,6 +63,13 @@ npm run dev
 1. In **Batch Verify Documents**, click **Add File** repeatedly
 2. Click **Verify Batch**
 3. Review per-file result and signer details
+
+### Batch sign
+1. Go to **Batch Sign** tab
+2. Load keystore and password
+3. Select one or more documents
+4. Click **Sign X Document(s)**
+5. Download produced `.cms` files
 
 ## Troubleshooting
 - NCALayer connection issues:

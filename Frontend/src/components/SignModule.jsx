@@ -12,7 +12,7 @@ const SignModule = () => {
   const [status, setStatus] = useState('');
   const [socket, setSocket] = useState(null);
   const socketRef = useRef(null);
-  const [pendingRequest, setPendingRequest] = useState(null);
+  const [, setPendingRequest] = useState(null);
   const pendingRequestRef = useRef(null);
 
   // Auto-connect to NCALayer on component mount

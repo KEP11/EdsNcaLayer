@@ -11,6 +11,10 @@ Current architecture:
 ## Repository Structure
 - [Backend](Backend) — ASP.NET Core Web API (`EdsWebApi.csproj`)
 - [Frontend](Frontend) — React application
+- [Frontend/src/components](Frontend/src/components) — UI modules
+  - [SignModule.jsx](Frontend/src/components/SignModule.jsx)
+  - [BatchSignModule.jsx](Frontend/src/components/BatchSignModule.jsx)
+  - [VerifyModule.jsx](Frontend/src/components/VerifyModule.jsx)
 - [Frontend/src/services](Frontend/src/services) — modular frontend services
   - [common.js](Frontend/src/services/common.js)
   - [signService.js](Frontend/src/services/signService.js)
@@ -31,10 +35,12 @@ Current architecture:
 
 ## Frontend Features (Current)
 - Sign document via NCALayer (`signFilePath`)
+- Batch sign documents via backend API (`/api/sign/batch`)
 - Verify CMS signature via NCALayer (`checkCMS`)
 - Extract original document from CMS via NCALayer (`saveCMS`)
 - Batch verify CMS files (sequentially)
-- Batch sign section exists in code but is hidden in UI by feature flag (`showBatchSign = false` in [Frontend/src/App.jsx](Frontend/src/App.jsx))
+
+UI is organized in modules and switched by tabs in [Frontend/src/App.jsx](Frontend/src/App.jsx).
 
 ## Backend Features (Current)
 Backend runs on `http://localhost:5000` and exposes Swagger at `/`.
@@ -81,7 +87,9 @@ dotnet run --project EdsWebApi.csproj
 ```
 
 ## Notes
-- Frontend currently communicates directly with NCALayer for UI operations.
+- Frontend uses both integration paths:
+  - NCALayer WebSocket for sign/verify/extract in modules
+  - Backend API for batch signing in `BatchSignModule`
 - If NCALayer is not running, frontend signing/verification/extraction will fail.
 - Backend and frontend are now modularized and can evolve independently.
 
