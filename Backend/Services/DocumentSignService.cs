@@ -332,7 +332,14 @@ public sealed class DocumentSignService : IDocumentSignService
                 return true;
             }
 
-            var data = Convert.FromBase64String(base64Data);
+            // Clean the Base64 string to handle whitespace, newlines, etc.
+            var cleanedBase64 = base64Data
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace(" ", "")
+                .Replace("\t", "");
+                
+            var data = Convert.FromBase64String(cleanedBase64);
 
             if (data.Length < 1024 || data[0] != 0x30)
             {
@@ -391,10 +398,17 @@ public sealed class DocumentSignService : IDocumentSignService
     {
         _logger.LogInformation("Adding co-signature to existing CMS");
 
-        var existingSignaturePem = PrepareSignatureForVerification(existingCmsBase64);
+        // Clean the Base64 string to handle whitespace, newlines, etc.
+        var cleanedBase64 = existingCmsBase64
+            .Replace("\r", "")
+            .Replace("\n", "")
+            .Replace(" ", "")
+            .Replace("\t", "");
+
+        var existingSignaturePem = PrepareSignatureForVerification(cleanedBase64);
         var originalData = ExtractOriginalData(existingSignaturePem);
 
-        return _coSigningService.AddCoSignature(_kalkanApi, existingCmsBase64, originalData);
+        return _coSigningService.AddCoSignature(_kalkanApi, cleanedBase64, originalData);
     }
 
     private string PrepareSignatureForVerification(string cmsBase64)
